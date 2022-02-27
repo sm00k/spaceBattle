@@ -4,8 +4,9 @@ interface
 uses wingraph, loadBmp, winCrt;
 
    procedure showScore;
-   procedure addPlayer;
-   procedure scoreCounter(count	: integer);
+   procedure addPlayer(name : string);
+   procedure scoreCounter(count: integer);
+   procedure createScore;
    
 implementation
 
@@ -27,7 +28,7 @@ type
 		next  : itemptr;
 	     end;     
 
-procedure createScore; //completed
+procedure createScore; //creating and populating a list of results
 const
    stop : integer  = 10;//not custom const
    score : integer = 0;
@@ -57,38 +58,38 @@ begin
    close(f);
 end;
 
-procedure sortScore;//not complited
+procedure sortScore(var list : itemptr);//sorting a linear list 
 var
-   tmp, first : itemptr;
-   f	      : text;
+   tmp	: itemptr;
+   pp	: ^itemptr;
+   i, n	: integer;
 begin
-   {$I-}
-   assign(f, fileName);
-   reset(f);
-   if IOResult <> 0 then
+   n := 1;
+   tmp := list;
+   while tmp <> nil do
    begin
-      writeln('failed open this file');
-      halt(1);
+      tmp := tmp^next;
+      n := n + 1;
    end;
-   first := nil;
-   tmp := nil;
-   while not SeekEof(f) do
+   for i := 0 to n-1 do
    begin
-      while not SeekEoln(f) do
+      pp := @list;
+      while pp^ <> nil do
       begin
-	 new(tmp)
-	 read(f, tmp^.name);
-	 read(f, tmp^.score);
-	 tmp^.next := first;
-	 first := tmp;
+	 if (pp^^.next <> nil) and (pp^^.data > pp^^.next^.data) then
+	 begin
+	    tmp := pp^;
+	    pp^ := pp^^.next;
+	    tmp^.next := pp^^.next;
+	    pp^^.next := tmp;
+	 end
+	 else
+	    pp := @(pp^^.next);
       end;
-      readln(f);
    end;
-   close(f);
-   
 end;
 
-procedure showScore;//complited
+procedure showScore;//put score list on screen
 const
    count : integer     = 10;//not custom const
    errOpnFile : string = 'Could not open spraite/score.txt';
@@ -106,8 +107,8 @@ begin
    reset(f);
    if IOResult <> 0 then 
    begin
-      createScore;
-      reset(f);
+      writeln('file isn''t open');
+      halt(1);
    end;
    i := 1;
    x := dist;
@@ -141,3 +142,11 @@ begin
    close(f);
 end;    
 
+procedure addPlayer(name : string);//
+var
+   key : integer;
+begin
+   ClearDevace;
+   loadPcs('spraite/backgroundMenu.bmp', 0, 0);
+   
+end;
