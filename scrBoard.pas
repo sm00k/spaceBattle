@@ -78,6 +78,13 @@ begin
       tmp := tmp^next;
       n := n + 1;
    end;
+   while n > 10 then
+   begin
+      tmp := list;
+      list := list^.next;
+      dispose(tmp);
+      n := n - 1;
+   end;
    for i := 0 to n-1 do
    begin
       pp := @list;
