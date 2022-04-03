@@ -1,5 +1,6 @@
 unit engine;
 interface
+uses wingraph, winCrt;
 
 procedure graphics;
 procedure getKey(var code : integer);
