@@ -1,6 +1,6 @@
 unit gamePlay;
 interface
-uses winGraph, getKeyCrt, loadBmp;
+uses winGraph, engine;
 
 implementation
 

@@ -1,6 +1,6 @@
 program space_war;
 
-uses menu, intGraphic, scrBoard;
+uses engine, menu, scrBoard;
 
 var
    control : mng;

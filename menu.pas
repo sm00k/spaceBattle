@@ -1,7 +1,7 @@
 unit menu;
 interface
 
-uses getKeyCrt, wingraph, loadBmp;
+uses wingraph, winCrt, engine;
 type
         mng = record
                 newGame, score, quit : boolean;
@@ -11,96 +11,83 @@ procedure mainMenu(var control : mng);
 
 implementation
 
-   function centreX(txt	: string): integer;
-   begin
-      centreX := (GetMaxX div 2) - (TextWidth(txt) div 2);
-   end;
+type
+   move	= record
+	     pos, up, down, shift : integer;
+	     anim		  : animatType;
+	     above, under	  : word;
+	  end;
 
-   function centreY(txt	: string): integer;
-   begin
-      centreY := (GetMaxY div 2) - (TextHeight(txt) div 2);
-   end;
+procedure goUp(var loc : move; indentUp : integer);
+begin
+   PutAnim(loc.shift, loc.pos, loc.anim, loc.under);
+   loc.pos := loc.pos + indentUp;
+   if loc.pos > loc.up then
+      loc.pos := loc.down;
+end;
 
-   procedure mainMenu(var control : mng);
-   const
-      font : word		= TimesNewRomanFont;
-      direction : word		= HorizDir;
-      charSize :  word		= 30;
-      indentUp : integer	= 50;
-      indentLeft : integer	= 60;
-      bit : word		= TransPut;
-      bitT: word                = BkgPut;
-   var
-      pcsWidth, pcsHeight	: integer;
-      anim			: animatType;
-      key			: integer;
-      up, mid, down, pos, shift	: integer;
+procedure goDown(var loc : move, indentUp : integer);
+begin
+   PutAnim(loc.shift, loc.pos, loc.anim, loc.under);
+   loc.pos := loc.pos - indentUp;
+   if loc.pos < loc.down then
+      loc.pos := loc.up;
+end;
+
+procedure mainMenu(var control : mng);
+const
+   font : word	   = TimesNewRomanFont;
+   direction : word	   = HorizDir;
+   mItemSize :  word	   = 30;
+   indentUp : integer   = 50;
+   indentLeft : integer = 60;
+   pcsSize : integer	   = 25;
+   headerSize : integer = 100;
+var
+   loc	     : move;
+   key, x, y : integer;
+begin
+   ClearDevice;
+   loadPcs('spraite/cursor.bmp', 0, 0);
+   GetAnim(0, 0, pcsSize, pcsSize, black, anim);
+   ClearDevice;
+   loadPcs('spraite/backgroundMenu.bmp', 0, 0);
+   SetTextStyle(font, direction, headerSize);
+   screenCenterText(x, y, 'Space War');
+   OutTextXY(x, y, 'Space War');
+   loc.above := TransPut;
+   loc.under := BkgPut;
+   SetTextStyle(font, direction, mItemSize);
+   screenCenterText(x, y, 'New Game');
+   loc.up := y + (indentUp * 2);
+   loc.pos := loc.up;
+   loc.shift := x - indentLeft;
+   OutTextXY(x, up, 'New Game');
+   screenCenterText(x, y, 'Record');
+   OutTextXY(x, y + (indentUp * 3), 'Record');
+   screenCenterText(x, y, 'Quit');
+   loc.down := y + (indentUp * 4);
+   OutTextXY(x, loc.down, 'Quit');
+   PutAnim(loc.shift, loc.up, loc.anim, loc.above);
+   while true do
    begin
-      ClearDevice;
-      loadPcs('spraite/cursor.bmp', 0, 0);
-      pcsWidth := 25;
-      pcsHeight := 25;
-      GetAnim(0, 0, pcsWidth, pcsHeight, black, anim);
-      ClearDevice;
-      loadPcs('spraite/backgroundMenu.bmp', 0, 0);
-      up := centreY('New Game') + (indentUp * 2);
-      mid := centreY('Record') + (indentUp * 3);
-      down := centreY('Quit') + (indentUp * 4);
-      shift := centreX('New Game') - indentLeft;
-      pos := up;
-      SetTextStyle(font, direction, 100);
-      OutTextXY(centreX('Space War'), centreY('Space War'), 'Space War');
-      SetTextStyle(font, direction, charSize);
-      OutTextXY(centreX('New Game'), up, 'New Game');
-      OutTextXY(centreX('Record'), mid, 'Record');
-      OutTextXY(centreX('Quit'), down, 'Quit');
-      PutAnim(shift, up, anim, bit);
-      while true do
-	 begin
-	    getKey(key);
-	    if (pos = up) and (key = 13) then
-	       begin
-		  control.newGame := true;
-		  break;
-	       end;
-	    if (pos = mid) and (key = 13) then
-	       begin
-		  control.score := true;
-		  break;
-	       end;
-	    if (pos = down) and (key = 13) then
-	       begin
-		  control.quit := true;
-		  break;
-	       end;
-	    if (key = -80) or (key = 115) then
-	       begin
-                  PutAnim(shift, pos, anim, bitT);
-		  pos := pos + indentUp;
-		  if pos <= down then
-		     begin
-			PutAnim(shift, pos, anim, bit);
-		     end;
-		  if pos > down then
-		     begin
-			pos := up;
-			PutAnim(shift, up, anim, bit);
-		     end;
-	       end;
-	    if (key = -72) or (key = 119) then
-	       begin
-                  PutAnim(shift, pos, anim, bitT);
-		  pos := pos - indentUp;
-		  if pos >= up then
-		     begin
-			PutAnim(shift, pos, anim, bit);
-		     end;
-		  if pos < up then
-		     begin
-			pos := down;
-			PutAnim(shift, pos, anim, bit);
-		     end;
-	       end;
+      getKey(key);
+      if key = 13 then
+      begin
+	 case pos of
+	   up	: control.newGame := true;
+	   mid	: control.score := true;
+	   down	: control.quit := true;
 	 end;
+	 break;
+      end;
+      case key of
+	-80 : goUp(loc, indentUp);
+	115 : goUp(loc, indentUp);// check number key
+	-72 : goDown(loc, indentUp);
+	119 : goDown(loc, indentUp);
+      end;
+      PutAnim(loc.shift, loc.pos, loc.anim, loc.above);
    end;
- end.
+end;
+end.

@@ -1,7 +1,7 @@
 unit scrBoard;
 interface
 
-uses wingraph, loadBmp, GetKeyCrt;
+uses wingraph, engine;
 
    procedure showScore;
    procedure addPlayer(score : integer);

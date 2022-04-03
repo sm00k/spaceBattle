@@ -66,4 +66,9 @@ begin
    x := (GetMaxX div 2) - (TextWhidth(text) div 2);
    y := (GetMaxY div 2) - (TextHeight(text) div 2);
 end;
+
+procedure loadAnim(var anim : ?);
+begin
+end;
+
 end.
