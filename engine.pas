@@ -9,8 +9,18 @@ procedure screenCenter(var x, y : integer);
 procedure screenCenterText(var x, y : integer; text : string);
 procedure loadAnim(var arr : anim; frameSize, numOfFrame : integer;
 fileName :	       string);
-procedure enemy(arr : anim; var botX, botY : integer; x, y : integer);
+function enemy(p : pointer) : ptrint;
 
+type
+   anim	= array[1..8] of animatType;
+var
+   arr		      : anim;
+   botX, botY, pX, pY : integer;
+   finished	      : longint;
+
+threadvar
+   thri : ptrint;
+   
 implementation
 
 procedure graphics;
@@ -71,7 +81,7 @@ begin
    y := (GetMaxY div 2) - (TextHeight(text) div 2);
 end;
 
-procedure loadAnim(var arr : anim; frameSize, numOfFrame : integer;
+procedure loadAnim(var sprt : anim; frameSize, numOfFrame : integer;
                    fileName : string);
 var
    i, x, y, x2, y2 : integer;
@@ -83,58 +93,58 @@ begin
    loadPcs(fileName, x, y);
    for i := 1 to numOfFrame do
    begin
-      GetAnim(x, y, x2, y2, black, arr[i]);
+      GetAnim(x, y, x2, y2, black, sprt[i]);
       x := x2;
       x2 := x2 + frameSize;
    end;
    clearDevice;
 end;
 
-procedure enemy(arr : anim; var botX, botY : integer; x, y : integer);
+function enemy(p : pointer) : ptrint;
 const
    move : integer = 5;
 begin
    while true do
    begin
-      if ((botX - x) = 0) and ((botY - Y) > 0) then
+      if ((botX - pX) = 0) and ((botY - pY) > 0) then
       begin
 	 frame := 1;
 	 botY := botY - move;
       end;
-      if ((botX - x) < 0) and ((botY - Y) > 0) then
+      if ((botX - pX) < 0) and ((botY - pY) > 0) then
       begin
 	 frame := 2;
 	 botX := botX + move;
 	 botY := botY - move;
       end;
-      if ((botX - x) < 0) and ((botY - Y) = 0) then
+      if ((botX - pX) < 0) and ((botY - pY) = 0) then
       begin
 	 frame := 3;
 	 botX := botX + move;
       end;
-      if ((botX - x) < 0) and ((botY - Y) < 0) then
+      if ((botX - pX) < 0) and ((botY - pY) < 0) then
       begin
 	 frame := 4;
 	 botX := botX + move;
 	 botY := botY + move;
       end;
-      if ((botX - x) = 0) and ((botY - Y) < 0) then
+      if ((botX - pX) = 0) and ((botY - pY) < 0) then
       begin
 	 frame := 5;
 	 botY := botY + move;
       end;
-      if ((botX - x) > 0) and ((botY - Y) < 0) then
+      if ((botX - pX) > 0) and ((botY - pY) < 0) then
       begin
 	 frame := 6;
 	 botX := botX - move;
 	 botY := botY + move;
       end;
-      if ((botX - x) > 0) and ((botY - y) = 0) then
+      if ((botX - pX) > 0) and ((botY - pY) = 0) then
       begin
 	 frame := 7;
 	 botX := botX - move;
       end;
-      if ((botX - x) > 0) and ((botY - Y) > 0) then
+      if ((botX - pX) > 0) and ((botY - pY) > 0) then
       begin
 	 frame := 8;
 	 botX := botX - move;
@@ -143,6 +153,9 @@ begin
       PutAnim(botX, botY, arr[frame], TransPut);
       sleep(10);
       PutAnim(botX, botY, arr[frame], bkgPut);
+      inc(thri);
    end;
+   InterLockedIncrement(finished);
+   f:=0;
 end;
 end.
