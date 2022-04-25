@@ -7,6 +7,9 @@ procedure getKey(var code : integer);
 procedure loadPcs(nameFile : string; x, y : integer);
 procedure screenCenter(var x, y : integer);
 procedure screenCenterText(var x, y : integer; text : string);
+procedure loadAnim(var arr : anim; frameSize, numOfFrame : integer;
+fileName :	       string);
+procedure enemy(arr : anim; var botX, botY : integer; x, y : integer);
 
 implementation
 
@@ -68,8 +71,78 @@ begin
    y := (GetMaxY div 2) - (TextHeight(text) div 2);
 end;
 
-procedure loadAnim(var anim : ?);
+procedure loadAnim(var arr : anim; frameSize, numOfFrame : integer;
+                   fileName : string);
+var
+   i, x, y, x2, y2 : integer;
 begin
+   x := 0;
+   y := 0;
+   x2 := frameSize;
+   y2 := frameSize;
+   loadPcs(fileName, x, y);
+   for i := 1 to numOfFrame do
+   begin
+      GetAnim(x, y, x2, y2, black, arr[i]);
+      x := x2;
+      x2 := x2 + frameSize;
+   end;
+   clearDevice;
 end;
 
+procedure enemy(arr : anim; var botX, botY : integer; x, y : integer);
+const
+   move : integer = 5;
+begin
+   while true do
+   begin
+      if ((botX - x) = 0) and ((botY - Y) > 0) then
+      begin
+	 frame := 1;
+	 botY := botY - move;
+      end;
+      if ((botX - x) < 0) and ((botY - Y) > 0) then
+      begin
+	 frame := 2;
+	 botX := botX + move;
+	 botY := botY - move;
+      end;
+      if ((botX - x) < 0) and ((botY - Y) = 0) then
+      begin
+	 frame := 3;
+	 botX := botX + move;
+      end;
+      if ((botX - x) < 0) and ((botY - Y) < 0) then
+      begin
+	 frame := 4;
+	 botX := botX + move;
+	 botY := botY + move;
+      end;
+      if ((botX - x) = 0) and ((botY - Y) < 0) then
+      begin
+	 frame := 5;
+	 botY := botY + move;
+      end;
+      if ((botX - x) > 0) and ((botY - Y) < 0) then
+      begin
+	 frame := 6;
+	 botX := botX - move;
+	 botY := botY + move;
+      end;
+      if ((botX - x) > 0) and ((botY - y) = 0) then
+      begin
+	 frame := 7;
+	 botX := botX - move;
+      end;
+      if ((botX - x) > 0) and ((botY - Y) > 0) then
+      begin
+	 frame := 8;
+	 botX := botX - move;
+	 botY := botY - move;
+      end;
+      PutAnim(botX, botY, arr[frame], TransPut);
+      sleep(10);
+      PutAnim(botX, botY, arr[frame], bkgPut);
+   end;
+end;
 end.
