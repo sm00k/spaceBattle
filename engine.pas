@@ -1,6 +1,6 @@
 unit engine;
 interface
-uses wingraph, winCrt;
+uses {$ifdef unix}cthreads, {$endif} sysutils, wingraph, winCrt;
 
 procedure graphics;
 procedure getKey(var code : integer);
@@ -103,6 +103,8 @@ end;
 function enemy(p : pointer) : ptrint;
 const
    move : integer = 5;
+var
+   frame : integer;
 begin
    while true do
    begin
