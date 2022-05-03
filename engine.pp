@@ -112,45 +112,53 @@ begin
       begin
 	 frame := 1;
 	 botY := botY - move;
+	 sleep(100);
       end;
       if ((botX - pX) < 0) and ((botY - pY) > 0) then
       begin
 	 frame := 2;
 	 botX := botX + move;
 	 botY := botY - move;
+	 sleep(100);
       end;
       if ((botX - pX) < 0) and ((botY - pY) = 0) then
       begin
 	 frame := 3;
 	 botX := botX + move;
+	 sleep(100);
       end;
       if ((botX - pX) < 0) and ((botY - pY) < 0) then
       begin
 	 frame := 4;
 	 botX := botX + move;
 	 botY := botY + move;
+	 sleep(100);
       end;
       if ((botX - pX) = 0) and ((botY - pY) < 0) then
       begin
 	 frame := 5;
 	 botY := botY + move;
+	 sleep(100);
       end;
       if ((botX - pX) > 0) and ((botY - pY) < 0) then
       begin
 	 frame := 6;
 	 botX := botX - move;
 	 botY := botY + move;
+	 sleep(100);
       end;
       if ((botX - pX) > 0) and ((botY - pY) = 0) then
       begin
 	 frame := 7;
 	 botX := botX - move;
+	 sleep(100);
       end;
       if ((botX - pX) > 0) and ((botY - pY) > 0) then
       begin
 	 frame := 8;
 	 botX := botX - move;
 	 botY := botY - move;
+	 sleep(100);
       end;
       PutAnim(botX, botY, arr[frame], TransPut);
       sleep(10);
