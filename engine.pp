@@ -1,6 +1,6 @@
 unit engine;
 interface
-uses {$ifdef unix}cthreads, {$endif} sysutils, wingraph, winCrt;
+uses {$ifdef unix}cthreads, {$endif} sysutils, windows, wingraph, winCrt;
 
 procedure graphics;
 procedure getKey(var code : integer);
@@ -9,18 +9,7 @@ procedure screenCenter(var x, y : integer);
 procedure screenCenterText(var x, y : integer; text : string);
 procedure loadAnim(var arr : anim; frameSize, numOfFrame : integer;
 fileName :	       string);
-function enemy(p : pointer) : ptrint;
 
-type
-   anim	= array[1..8] of animatType;
-var
-   arr		      : anim;
-   botX, botY, pX, pY : integer;
-   finished	      : longint;
-
-threadvar
-   thri : ptrint;
-   
 implementation
 
 procedure graphics;
@@ -98,74 +87,5 @@ begin
       x2 := x2 + frameSize;
    end;
    clearDevice;
-end;
-
-function enemy(p : pointer) : ptrint;
-const
-   move : integer = 5;
-var
-   frame : integer;
-begin
-   while true do
-   begin
-      if ((botX - pX) = 0) and ((botY - pY) > 0) then
-      begin
-	 frame := 1;
-	 botY := botY - move;
-	 sleep(100);
-      end;
-      if ((botX - pX) < 0) and ((botY - pY) > 0) then
-      begin
-	 frame := 2;
-	 botX := botX + move;
-	 botY := botY - move;
-	 sleep(100);
-      end;
-      if ((botX - pX) < 0) and ((botY - pY) = 0) then
-      begin
-	 frame := 3;
-	 botX := botX + move;
-	 sleep(100);
-      end;
-      if ((botX - pX) < 0) and ((botY - pY) < 0) then
-      begin
-	 frame := 4;
-	 botX := botX + move;
-	 botY := botY + move;
-	 sleep(100);
-      end;
-      if ((botX - pX) = 0) and ((botY - pY) < 0) then
-      begin
-	 frame := 5;
-	 botY := botY + move;
-	 sleep(100);
-      end;
-      if ((botX - pX) > 0) and ((botY - pY) < 0) then
-      begin
-	 frame := 6;
-	 botX := botX - move;
-	 botY := botY + move;
-	 sleep(100);
-      end;
-      if ((botX - pX) > 0) and ((botY - pY) = 0) then
-      begin
-	 frame := 7;
-	 botX := botX - move;
-	 sleep(100);
-      end;
-      if ((botX - pX) > 0) and ((botY - pY) > 0) then
-      begin
-	 frame := 8;
-	 botX := botX - move;
-	 botY := botY - move;
-	 sleep(100);
-      end;
-      PutAnim(botX, botY, arr[frame], TransPut);
-      sleep(10);
-      PutAnim(botX, botY, arr[frame], bkgPut);
-      inc(thri);
-   end;
-   InterLockedIncrement(finished);
-   f:=0;
 end;
 end.
