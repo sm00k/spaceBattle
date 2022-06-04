@@ -1,112 +1,70 @@
-program space_war;
+program spaceBattle;
 
-uses wingraph, winCrt, engine, scrBoard;
-
-type
-   move	= record
-	     pos, up, down, shift : integer;
-	     anim		  : animatType;
-	     above, under	  : word;
-	  end;
-
-type
-   mng = record
-	    newGame, score, quit : boolean;
-	 end;
-
-procedure goUp(var loc : move; indentUp : integer);
-begin
-   PutAnim(loc.shift, loc.pos, loc.anim, loc.under);
-   loc.pos := loc.pos + indentUp;
-   if loc.pos > loc.up then
-      loc.pos := loc.down;
-end;
-
-procedure goDown(var loc : move, indentUp : integer);
-begin
-   PutAnim(loc.shift, loc.pos, loc.anim, loc.under);
-   loc.pos := loc.pos - indentUp;
-   if loc.pos < loc.down then
-      loc.pos := loc.up;
-end;
-
-procedure mainMenu(var control : mng);
+uses windows, wingraph, engine;
 const
-   font : word	   = TimesNewRomanFont;
-   direction : word	   = HorizDir;
-   mItemSize :  word	   = 30;
-   indentUp : integer   = 50;
-   indentLeft : integer = 60;
-   pcsSize : integer	   = 25;
-   headerSize : integer = 100;
+   cursor : string	= 'spraite/cursor.bmp';
+   bkg : string		= 'spraite/backgroundMenu.bmp';
+   font : word		= TimesNewRomanFont;
+   direction : word	= HorizDir;
+   headerSize :	integer	= 100;
+   pcsSize : integer	= 25;
+   indentUp : integer	= 50;
+   indebtLeft :	integer	= 60;
+   textSize : word	= 30;
 var
-   loc	     : move;
-   key, x, y : integer;
+   driver, x, y	: integer;
+   anim		: animatType;
+   f		: text;
 begin
+   {$I-}
+   Assign(f, fName);
+   reset(f);
+   {$I+}
+   if IOResult <> 0 then
+      CreateScore;
+   DetectGraph(driver);
+   Ititgraph(driver, mFullScr, '');
    ClearDevice;
-   loadPcs('spraite/cursor.bmp', 0, 0);
+   LoadPcs(cursor, 0, 0);
    GetAnim(0, 0, pcsSize, pcsSize, black, anim);
    ClearDevice;
-   loadPcs('spraite/backgroundMenu.bmp', 0, 0);
+   LoadPcs(bkg, 0, 0);
    SetTextStyle(font, direction, headerSize);
-   screenCenterText(x, y, 'Space War');
+   ScreenCenterText(x, y, 'Space War');
    OutTextXY(x, y, 'Space War');
-   loc.above := TransPut;
-   loc.under := BkgPut;
-   SetTextStyle(font, direction, mItemSize);
-   screenCenterText(x, y, 'New Game');
-   loc.up := y + (indentUp * 2);
-   loc.pos := loc.up;
-   loc.shift := x - indentLeft;
-   OutTextXY(x, up, 'New Game');
-   screenCenterText(x, y, 'Record');
-   OutTextXY(x, y + (indentUp * 3), 'Record');
-   screenCenterText(x, y, 'Quit');
-   loc.down := y + (indentUp * 4);
-   OutTextXY(x, loc.down, 'Quit');
-   PutAnim(loc.shift, loc.up, loc.anim, loc.above);
+   ScreenCenterText(x, y, 'Quit');
+   y := y + (indentUp * 4);
+   maxY := y;
+   OutText(x, y, 'Quit');
+   ScreenCenterText(x, y, 'Record');
+   y := y + (indentUp * 3);
+   OutTextXY(x, y, 'Record');
+   ScreenCenterText(x, y, 'New Game');
+   y := y + (indentUp * 2);
+   minY := y;
+   OutTextXY(x, y, 'New Game');
+   x := x + indentLeft;
    while true do
    begin
-      getKey(key);
-      if key = 13 then
+      PutAnim(x, y, anim, bkgPut);
+      if GetKeyState(Ord(VK_SPACE)) and $80 > 0 then
       begin
-	 case pos of
-	   up	: control.newGame := true;
-	   mid	: control.score := true;
-	   down	: control.quit := true;
-	 end;
-	 break;
+	 if y = minY then
+	    GamePlay;
+	 if y = maxY then
+	    break;
+	 if (y > minY) and (y > maxY) then
+	    ShowScore;
       end;
-      case key of
-	-80 : goUp(loc, indentUp);
-	115 : goUp(loc, indentUp);// check number key
-	-72 : goDown(loc, indentUp);
-	119 : goDown(loc, indentUp);
-      end;
-      PutAnim(loc.shift, loc.pos, loc.anim, loc.above);
+      if GetKeyState(Ord('W')) and $80 > 0 then
+	 y := y - indentUp;
+      if GetKeyState(Ord('S')) and $80 > 0 then
+	 y := y + indentUp;
+      if y > maxY then
+	 y := minY;
+      if y < minY then
+	 y := maxY;
+      PutAnim(x, y, anim, TransPut);
+      sleep(10);
    end;
-end;
-
-var
-   control : mng;
-
-begin
-   graphics;
-   control.newGame := false;
-   control.score := false;
-   control.quit := false;
-   while not control.quit do
-      begin
-	 mainMenu(control);
-	 if control.newGame then
-	 begin
-	    game;
-	    control.newGame := false;
-	 end;
-	 if control.score then
-	 begin
-	    scrBoard;
-	    control.score := false;
-	 end;
-      end;
 end.
