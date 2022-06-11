@@ -1,6 +1,7 @@
 unit engine;
+{$DEFINE DEBUG}
 interface
-uses windows, wingraph;
+uses windows, wingraph, wincrt;
 
 procedure LoadPcs(name : string; x, y : integer);
 procedure ScreenCenterText(var x, y : integer; txt : string);
@@ -20,11 +21,15 @@ var
    f	  : file;
 begin
    {$I-}
-   Assigin(f, nameFile);
+   Assign(f, name);
    Reset(f, 1);
    {$I+}
    if IOResult <> 0 then
-      Halt;
+   begin
+      writeln('don''t open file');
+      Readln();
+      Halt(1);
+   end;
    size := FileSize(f);
    GetMem(bitmap, size);
    BlockRead(f, bitmap^, size);
@@ -33,10 +38,10 @@ begin
    FreeMem(bitmap);
 end;
 
-procedure screenCenterText(var x, y : integer; text : string);
+procedure screenCenterText(var x, y : integer; txt : string);
 begin
-   x := (GetMaxX div 2) - (TextWhidth(text) div 2);
-   y := (GetMaxY div 2) - (TextHeight(text) div 2);
+   x := (GetMaxX div 2) - (TextWidth(txt) div 2);
+   y := (GetMaxY div 2) - (TextHeight(txt) div 2);
 end;
 
 procedure CreateScore;
@@ -48,46 +53,68 @@ var
    i : integer;
 begin
    {$I-}
-   Assigin(f, fName);
+   Assign(f, fName);
    Rewrite(f);
+   {$I+}
    if IOResult <> 0 then
    begin
       writeln('file isn''t open');
+      Readln();
       Halt(1);
    end;
    for i := 1 to numOfLines do
    begin
-      writeln('---');
-      writeln(startingScore);
+      writeln(f, '---');
+      writeln(f, startingScore);
    end;
    if IOResult <> 0 then
    begin
       writeln('fsiled to write to file');
-      halt(1);
+      Readln();
+      Halt(1);
    end;
    close(f);
 end;
 
+procedure getKey(var code : integer);
+var
+   c : char;
+begin
+   c := ReadKey;
+   if c = #0 then
+   begin
+      c := ReadKey;
+      code := -ord(c);
+   end
+   else
+   begin
+      code := ord(c);
+   end;
+end;
+
+
 procedure showScore;
 const
    count : integer	 = 10;
-   errOpnFile : string	 = 'Could not open spraite/score.txt';
-   dist : integer	 = GetMaxX div 3;
+   errOpnFile : string	 = 'Could not open sprites/score.txt';
+   //dist : integer	 = GetMaxX div 3;
    indentUp : integer	 = 50;
    indentWidth : integer = 20;
-   clrTxt : longword	 = white;
+   //clrTxt : word	 = white;
    font : word		 = TimesNewRomanFont;
    direction : word	 = HorizDir;
    charSize : word	 = 30;
 var
-   i, x, y : integer;
-   f	   : text;
-   txt	   : string;
+   i, x, y, c : integer;
+   f	      : text;
+   txt	      : string;
+   dist	      : integer;
 begin
-   ClearDevace;
-   loadPcs('spraite/backgroundMenu.bmp', 0, 0);
+   ClearDevice;
+   LoadPcs('sprites\backgroundMenu.bmp', 0, 0);
    SetTextStyle(font, direction, charSize);
-   SetColor(clrTxt);
+   SetColor(white);
+   dist := GetMaxX div 3;
    {$I-}
    assign(f, fName);
    reset(f);
@@ -102,16 +129,17 @@ begin
    OutTextXY(x, y, 'name');
    x := dist + dist;
    OutTextXY(x, y, 'score');
+   y := y + indentUp;
    while not SeekEof(f) do
    begin
       if x > dist then
       begin
 	 x := dist;
       end
-      else
-      begin
-	 x := dist + dist;
-      end;
+   else
+   begin
+      x := dist + dist;
+   end;
       if i > 2 then
       begin
 	 y := y + indentUp;
@@ -126,33 +154,63 @@ begin
       readln(f);
    end;
    close(f);
+   while true do
+   begin
+      if GetKeyState(VK_ESCAPE) and $80 > 0 then
+	 break;
+      sleep(200);
+   end;
 end;
 
 type
    anim	= array[1..8] of animatType;
+
+procedure LoadAnim(name : string; frameSize, amoutFrame : integer; var arr : anim);
+var
+   i, x, y, x2, y2 : integer;
+begin
+   x := 0;
+   y := 0;
+   x2 := frameSize;
+   y2 := frameSize;
+   LoadPcs(name, x, y);
+   for i := 1 to amoutFrame do
+   begin
+      GetAnim(x, y, x2, y2, black, arr[i]);
+      x := x2;
+      x2 := x2 + frameSize;
+   end;
+   ClearDevice;
+end;
+
+procedure MoveForward(var pX, pY : integer; x, y : integer);
+begin
+   pX := pX + x;
+   pY := pY + y;
 end;
 
 procedure GamePlay;
 const
-   bkg : string		       = 'bkg.bmp';
-   player : string	       = 'PlayerShip.bmp';
-   enemy : string	       = 'EnemyShip.bmp';
-   shoot : string	       = 'shoot.bmp';
+   bkg : string		       = 'sprites\bkgGame.bmp';
+   player : string	       = 'sprites\PlayerShip.bmp';
+   enemy : string	       = 'sprites\EnemyShip.bmp';
+   //shoot : string	       = 'shoot.bmp';
    strideLengthShip : integer  = 5;
    strideLengthShoot : integer = 5;
    amoutFrame :	integer	       = 8;
 var
    frameSize, frame, pX, pY : integer;
-   pAnim		    : anim;
+   pAnim, eAnim		    : anim;
    shootAnim		    : animatType;
 begin
    ClearDevice;
+   LoadPcs(bkg, 0, 0);
    frameSize := 100;
    LoadAnim(player, frameSize, amoutFrame, PAnim);
    LoadAnim(enemy, frameSize, amoutFrame, eAnim);
-   LoadPcs(shoot, 0, 0);
+   //LoadPcs(shoot, 0, 0);
    frameSize := 10;
-   GetAnim(0, 0, frameSize, frameSize, black, shootAnim);
+   //GetAnim(0, 0, frameSize, frameSize, black, shootAnim);
    ClearDevice;
    LoadPcs(bkg, 0, 0);
    frame := 1;
@@ -160,7 +218,7 @@ begin
    pY := GetMaxY div 2;
    while true do
    begin
-      PutAnim(pX, pY, player[frame], bkgPut);
+      PutAnim(pX, pY, pAnim[frame], bkgPut);
       if GetKeyState(VK_ESCAPE) and $80 > 0 then
 	 break;
       if GetKeyState(Ord('W')) and $80 > 0 then
@@ -181,14 +239,17 @@ begin
 	 frame := frame - 1;
 	 if frame < 1 then
 	    frame := amoutFrame;
+	 Sleep(200);
       end;
       if GetKeyState(Ord('D')) and $80 > 0 then
 	 begin
 	    frame := frame + 1;
 	    if frame > amoutFrame then
 	       frame := 1;
+	    Sleep(200);
 	 end;
-      PutAnim(pX, pY, player[frame], TransPut);
+      PutAnim(pX, pY, pAnim[frame], TransPut);
       sleep(10);
    end;
 end;
+end.
