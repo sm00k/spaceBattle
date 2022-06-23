@@ -10,8 +10,8 @@ procedure ShowScore;
 procedure GamePlay;
 
 const
-   fName : string = 'sprites\score.txt';
-
+   fName : string   = 'sprites\score.txt';
+   bkgMenu : string = 'sprites\backgroundMenu.bmp';
 implementation
   
 procedure LoadPcs(name : string; x, y : integer);
@@ -97,10 +97,8 @@ procedure showScore;
 const
    count : integer	 = 10;
    errOpnFile : string	 = 'Could not open sprites/score.txt';
-   //dist : integer	 = GetMaxX div 3;
    indentUp : integer	 = 50;
    indentWidth : integer = 20;
-   //clrTxt : word	 = white;
    font : word		 = TimesNewRomanFont;
    direction : word	 = HorizDir;
    charSize : word	 = 30;
@@ -111,7 +109,7 @@ var
    dist	      : integer;
 begin
    ClearDevice;
-   LoadPcs('sprites\backgroundMenu.bmp', 0, 0);
+   LoadPcs(bkgMenu, 0, 0);
    SetTextStyle(font, direction, charSize);
    SetColor(white);
    dist := GetMaxX div 3;
@@ -183,10 +181,61 @@ begin
    ClearDevice;
 end;
 
+type
+   charArr : array[1..3] of char;
+
+procedure AddPlayer;
+const
+   font : word	    = TimesNewRomanFont;
+   direction : word = HorizDir;
+   charSize : word  = 30;
+   indent : integer = 5;
+var
+   x, y, count : integer;
+   s	       : char;
+   name	       : charArr;
+begin
+   ClearScreen;
+   LoadPcs(0, 0, bkgMenu);
+   ScreenCenter(x, y);
+   SetTextStyle(font, direction, charSize);
+   x := x - indent;
+   for count := 1 to 3 do
+   begin
+      OutTextXY(x, y, '_');
+      x := x + indent;
+   end.
+   ScreenCenter(x, y);
+   count := 1;
+   while true do
+   begin
+      GetKey(s);
+      if s > 60 and s < 90 then
+      begin
+	 name[count] := s;
+	 
+   
 procedure MoveForward(var pX, pY : integer; x, y : integer);
 begin
    pX := pX + x;
    pY := pY + y;
+end;
+
+type
+   itemptr = ^item;
+   item	   = record
+		frame, x, y : integer;
+		prev, next  : itenptr;
+	     end;
+
+procedure del(var last : itemptr);
+var
+   tmp : itemptr;
+begin
+   tmp := last;
+   last := tmp^.prev;
+   last^.next := nil;
+   dispose(tmp);
 end;
 
 procedure GamePlay;
@@ -194,23 +243,28 @@ const
    bkg : string		       = 'sprites\bkgGame.bmp';
    player : string	       = 'sprites\PlayerShip.bmp';
    enemy : string	       = 'sprites\EnemyShip.bmp';
-   //shoot : string	       = 'shoot.bmp';
+   shoot : string	       = 'sprites\Soot.bmp';
+   pause : string	       = 'sprites\Pause.bmp';
    strideLengthShip : integer  = 5;
    strideLengthShoot : integer = 5;
    amoutFrame :	integer	       = 8;
 var
-   frameSize, frame, pX, pY : integer;
-   pAnim, eAnim		    : anim;
-   shootAnim		    : animatType;
+   frameSize, frame, pX, pY, pauseX, pauseY : integer;
+   pAnim, eAnim				    : anim;
+   shootAnim, pauseAnim			    : animatType;
+   first, last, tmp			    : itemptr;
 begin
    ClearDevice;
+   LoadPcs(pause, 0, 0);
+   frameSize := 300;
+   GetAnim(0, 0, frameSize, frameSize, black, pauseAnim);
    LoadPcs(bkg, 0, 0);
    frameSize := 100;
    LoadAnim(player, frameSize, amoutFrame, PAnim);
    LoadAnim(enemy, frameSize, amoutFrame, eAnim);
-   //LoadPcs(shoot, 0, 0);
+   LoadPcs(shoot, 0, 0);
    frameSize := 10;
-   //GetAnim(0, 0, frameSize, frameSize, black, shootAnim);
+   GetAnim(0, 0, frameSize, frameSize, black, shootAnim);
    ClearDevice;
    LoadPcs(bkg, 0, 0);
    frame := 1;
@@ -220,7 +274,25 @@ begin
    begin
       PutAnim(pX, pY, pAnim[frame], bkgPut);
       if GetKeyState(VK_ESCAPE) and $80 > 0 then
-	 break;
+      begin
+	 pauseX := (GetMaxX div 2) - pauseSizeX;
+	 pauseY := (GetMaxY div 2) - PauseSizeY;
+	 PutAnim(pauseX, pauseY, pauseAnim, TransPut);
+	 sleep(200);
+	 while true do
+	 begin
+	    if GetKeyState(VK_SPACE) and $80 > 0 then
+	       PutAnim(pauseX, pauseY, pauseAnim, bkgPut);
+	       break;
+	    if GetKeyState(VK_ESCAPE) and $80 > 0 then
+	    begin
+	       PutAnim(pauseX, pauseY, pauseAnim, bkgPut);
+	       AddPlayer;
+	       ShowScore;
+	       break;
+	    end;
+	    sleep(300);
+	 end;
       if GetKeyState(Ord('W')) and $80 > 0 then
 	 begin
 	    case frame of
@@ -248,7 +320,45 @@ begin
 	       frame := 1;
 	    Sleep(200);
 	 end;
+      if GetKeyState(VK_SPACE) then
+      begin
+	 new(tmp);
+	 tmp^.frame := frame;
+	 tmp^.x := pX;
+	 tmp^.y := pY;
+	 tmp^.prev := nil;
+	 tmp^.next := first;
+	 if first = nil then
+	    last := tmp
+	 else
+	    first^.prev := tmp;
+	 first := tmp;
+      end;
       PutAnim(pX, pY, pAnim[frame], TransPut);
+      tmp := last;
+      while tmp <> nil do
+      begin
+	 PutAnim(tmp^.x, tmp^.y, shootAnim, bkgPut);
+	 case frame of
+	   1: moveForward(tmp^.x, tmp^.y, 0, -strideLengthShip);
+	   2: moveForward(tmp^.x, tmp^.y,
+			  strideLengthShoot, -strideLengthShoot);
+	   3: moveForward(tmp^.x, tmp^.y, strideLengthShip, 0);
+	   4: moveForward(tmp^.x, tmp^.y,
+			  strideLengthShoot, strideLengthShoot);
+	   5: moveForward(tmp^.x, tmp^.y, 0, strideLengthShip);
+	   6: moveForward(tmp^.x, tmp^.y,
+			  -strideLengthShoot, strideLengthShoot);
+	   7: moveForward(tmp^.x, tmp^.y, -strideLengthShoot, 0);
+	   8: moveForward(tmp^.x, tmp^.y,
+			  -strideLengthShoot, -strideLengthShoot);
+	 end;
+	 if (tmp^.x < GetMaxX and tmp^.x > 0) and
+	    (tmp^.y < GetMaxY and tmp^.y > 0)
+	    PutAnim(tmp^.x, tmp^.y, shootAnim, TransPut)
+	 else
+	    del(last); 
+      end;
       sleep(10);
    end;
 end;
