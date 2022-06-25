@@ -1,5 +1,5 @@
 program spaceBattle;
-{$DEFINE DEBUG}
+{DEFINE DEBUG}
 uses windows, wingraph, engine;
 const
    cursor : string	= 'sprites\cursor.bmp';
@@ -62,6 +62,7 @@ begin
 	    {$ENDIF}
 	    if y = minY then
 	    begin
+	       sleep(200);
 	       GamePlay;
 	       Break;
 	    end;

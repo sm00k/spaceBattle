@@ -1,5 +1,5 @@
 unit engine;
-{$DEFINE DEBUG}
+{DEFINE DEBUG}
 interface
 uses windows, wingraph, wincrt;
 
@@ -156,7 +156,7 @@ begin
    begin
       if GetKeyState(VK_ESCAPE) and $80 > 0 then
 	 break;
-      sleep(200);
+      sleep(100);
    end;
 end;
 
@@ -182,8 +182,8 @@ begin
 end;
 
 type
-   charArr : array[1..3] of char;
-
+   charArr = array[1..3] of char;
+{
 procedure AddPlayer;
 const
    font : word	    = TimesNewRomanFont;
@@ -214,7 +214,7 @@ begin
       begin
 	 name[count] := s;
 	 
-   
+}
 procedure MoveForward(var pX, pY : integer; x, y : integer);
 begin
    pX := pX + x;
@@ -225,7 +225,7 @@ type
    itemptr = ^item;
    item	   = record
 		frame, x, y : integer;
-		prev, next  : itenptr;
+		prev, next  : itemptr;
 	     end;
 
 procedure del(var last : itemptr);
@@ -233,32 +233,42 @@ var
    tmp : itemptr;
 begin
    tmp := last;
+   if tmp^.prev <> nil then
+   begin
    last := tmp^.prev;
    last^.next := nil;
+   end
+   else
+      last := nil;
    dispose(tmp);
 end;
 
 procedure GamePlay;
+label
+   quitGamePlay;
 const
    bkg : string		       = 'sprites\bkgGame.bmp';
    player : string	       = 'sprites\PlayerShip.bmp';
    enemy : string	       = 'sprites\EnemyShip.bmp';
-   shoot : string	       = 'sprites\Soot.bmp';
+   shoot : string	       = 'sprites\shoot.bmp';
    pause : string	       = 'sprites\Pause.bmp';
    strideLengthShip : integer  = 5;
    strideLengthShoot : integer = 5;
    amoutFrame :	integer	       = 8;
+   pauseSizeX :	integer	       = 300;
+   pauseSizeY :	integer	       = 150;
 var
    frameSize, frame, pX, pY, pauseX, pauseY : integer;
    pAnim, eAnim				    : anim;
    shootAnim, pauseAnim			    : animatType;
    first, last, tmp			    : itemptr;
 begin
+   first := nil;
+   last := nil;
    ClearDevice;
    LoadPcs(pause, 0, 0);
    frameSize := 300;
    GetAnim(0, 0, frameSize, frameSize, black, pauseAnim);
-   LoadPcs(bkg, 0, 0);
    frameSize := 100;
    LoadAnim(player, frameSize, amoutFrame, PAnim);
    LoadAnim(enemy, frameSize, amoutFrame, eAnim);
@@ -275,24 +285,28 @@ begin
       PutAnim(pX, pY, pAnim[frame], bkgPut);
       if GetKeyState(VK_ESCAPE) and $80 > 0 then
       begin
-	 pauseX := (GetMaxX div 2) - pauseSizeX;
-	 pauseY := (GetMaxY div 2) - PauseSizeY;
+	 pauseX := (GetMaxX div 2) - (pauseSizeX div 2);
+	 pauseY := (GetMaxY div 2) - (pauseSizeY div 2);
 	 PutAnim(pauseX, pauseY, pauseAnim, TransPut);
 	 sleep(200);
 	 while true do
 	 begin
 	    if GetKeyState(VK_SPACE) and $80 > 0 then
-	       PutAnim(pauseX, pauseY, pauseAnim, bkgPut);
-	       break;
-	    if GetKeyState(VK_ESCAPE) and $80 > 0 then
 	    begin
 	       PutAnim(pauseX, pauseY, pauseAnim, bkgPut);
-	       AddPlayer;
-	       ShowScore;
+	       sleep(200);
 	       break;
 	    end;
-	    sleep(300);
+	    if GetKeyState(VK_ESCAPE) and $80 > 0 then
+	    begin
+	       sleep(200);
+	       ClearDevice;
+	       //AddPlayer;
+	       ShowScore;
+	       goto quitGamePlay;
+	    end;
 	 end;
+      end;
       if GetKeyState(Ord('W')) and $80 > 0 then
 	 begin
 	    case frame of
@@ -320,7 +334,7 @@ begin
 	       frame := 1;
 	    Sleep(200);
 	 end;
-      if GetKeyState(VK_SPACE) then
+      if GetKeyState(VK_SPACE)and $80 > 0 then
       begin
 	 new(tmp);
 	 tmp^.frame := frame;
@@ -333,13 +347,14 @@ begin
 	 else
 	    first^.prev := tmp;
 	 first := tmp;
+	 sleep(100);
       end;
       PutAnim(pX, pY, pAnim[frame], TransPut);
       tmp := last;
       while tmp <> nil do
       begin
 	 PutAnim(tmp^.x, tmp^.y, shootAnim, bkgPut);
-	 case frame of
+	 case tmp^.frame of
 	   1: moveForward(tmp^.x, tmp^.y, 0, -strideLengthShip);
 	   2: moveForward(tmp^.x, tmp^.y,
 			  strideLengthShoot, -strideLengthShoot);
@@ -353,13 +368,16 @@ begin
 	   8: moveForward(tmp^.x, tmp^.y,
 			  -strideLengthShoot, -strideLengthShoot);
 	 end;
-	 if (tmp^.x < GetMaxX and tmp^.x > 0) and
-	    (tmp^.y < GetMaxY and tmp^.y > 0)
+	 if ((tmp^.x < GetMaxX) and (tmp^.x > 0)) and
+	    ((tmp^.y < GetMaxY) and (tmp^.y > 0))then
 	    PutAnim(tmp^.x, tmp^.y, shootAnim, TransPut)
 	 else
-	    del(last); 
+	    del(last);
+	 tmp := tmp^.prev;
+	 sleep(10);
       end;
       sleep(10);
    end;
+   quitGamePlay:
 end;
 end.
