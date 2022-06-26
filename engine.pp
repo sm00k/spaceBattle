@@ -138,7 +138,7 @@ begin
    begin
       x := dist + dist;
    end;
-      if i > 2 then
+      if i > 2 then   
       begin
 	 y := y + indentUp;
 	 i := 1;
@@ -245,7 +245,7 @@ end;
 
 procedure GamePlay;
 label
-   quitGamePlay;
+   quitGameLp;
 const
    bkg : string		       = 'sprites\bkgGame.bmp';
    player : string	       = 'sprites\PlayerShip.bmp';
@@ -303,7 +303,7 @@ begin
 	       ClearDevice;
 	       //AddPlayer;
 	       ShowScore;
-	       goto quitGamePlay;
+	       goto quitGameLp;
 	    end;
 	 end;
       end;
@@ -350,8 +350,7 @@ begin
 	 sleep(100);
       end;
       PutAnim(pX, pY, pAnim[frame], TransPut);
-      tmp := last;
-      while tmp <> nil do
+      if tmp <> nil then
       begin
 	 PutAnim(tmp^.x, tmp^.y, shootAnim, bkgPut);
 	 case tmp^.frame of
@@ -374,10 +373,11 @@ begin
 	 else
 	    del(last);
 	 tmp := tmp^.prev;
-	 sleep(10);
-      end;
+      end
+      else
+	 tmp := last;
       sleep(10);
    end;
-   quitGamePlay:
+   quitGameLp:
 end;
 end.
