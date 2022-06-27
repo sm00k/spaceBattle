@@ -253,7 +253,7 @@ const
    shoot : string	       = 'sprites\shoot.bmp';
    pause : string	       = 'sprites\Pause.bmp';
    strideLengthShip : integer  = 5;
-   strideLengthShoot : integer = 5;
+   strideLengthShoot : integer = 10;
    amoutFrame :	integer	       = 8;
    pauseSizeX :	integer	       = 300;
    pauseSizeY :	integer	       = 150;
@@ -263,6 +263,7 @@ var
    shootAnim, pauseAnim			    : animatType;
    first, last, tmp			    : itemptr;
 begin
+   tmp := nil;
    first := nil;
    last := nil;
    ClearDevice;
@@ -325,14 +326,14 @@ begin
 	 frame := frame - 1;
 	 if frame < 1 then
 	    frame := amoutFrame;
-	 Sleep(200);
+	 Sleep(100);
       end;
       if GetKeyState(Ord('D')) and $80 > 0 then
 	 begin
 	    frame := frame + 1;
 	    if frame > amoutFrame then
 	       frame := 1;
-	    Sleep(200);
+	    Sleep(100);
 	 end;
       if GetKeyState(VK_SPACE)and $80 > 0 then
       begin
@@ -350,7 +351,7 @@ begin
 	 sleep(100);
       end;
       PutAnim(pX, pY, pAnim[frame], TransPut);
-      if tmp <> nil then
+            if tmp <> nil then
       begin
 	 PutAnim(tmp^.x, tmp^.y, shootAnim, bkgPut);
 	 case tmp^.frame of
@@ -376,7 +377,7 @@ begin
       end
       else
 	 tmp := last;
-      sleep(10);
+      sleep(5);
    end;
    quitGameLp:
 end;
